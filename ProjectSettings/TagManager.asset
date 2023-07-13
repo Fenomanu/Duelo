@@ -3,14 +3,23 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - AllyDmg
+  - Knife
+  - Interactable
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - CharacterLayer
   - Water
   - UI
+  - LightWorld
+  - DarkWorld
+  - KnifeLayer
+  - EnemyDMG
+  - EnemiesHitbox
+  - EnemyLayer
   - 
   - 
   - 
@@ -30,13 +39,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Teleport
   m_SortingLayers:
   - name: Default
     uniqueID: 0
