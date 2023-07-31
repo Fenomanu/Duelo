@@ -7,6 +7,9 @@ TagManager:
   - AllyDmg
   - Knife
   - Interactable
+  - Key
+  - Food
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -17,11 +20,11 @@ TagManager:
   - LightWorld
   - DarkWorld
   - KnifeLayer
-  - EnemyDMG
+  - AllyDMG
   - EnemiesHitbox
   - EnemyLayer
-  - 
-  - 
+  - RopeLayer
+  - ButtonLayer
   - 
   - 
   - 
