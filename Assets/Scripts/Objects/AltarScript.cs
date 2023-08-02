@@ -21,9 +21,9 @@ public class AltarScript : MonoBehaviour
         if (track)
         {
             print("Tracking");
-            gauntlet.position += .75f*Time.deltaTime * (hand.position - gauntlet.position).normalized;
+            gauntlet.position += .8f*Time.deltaTime * (hand.position - gauntlet.position).normalized;
             gauntlet.rotation = Quaternion.Slerp(gauntlet.rotation, hand.rotation, .5f*Time.deltaTime);
-            if((gauntlet.position - hand.position).sqrMagnitude < .005f)
+            if((gauntlet.position - hand.position).sqrMagnitude < .001f)
             {
                 print("Anclada");
                 track = false;
@@ -41,6 +41,7 @@ public class AltarScript : MonoBehaviour
             playerManagement = other.GetComponent<PlayerManagement>();
             hand = playerManagement.r_hand;
             playerManagement.BlockMovement();
+            GetComponent<Collider>().enabled = false;
         }
     }
     public void TrackHand()

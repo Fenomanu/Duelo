@@ -682,7 +682,7 @@ MonoBehaviour:
   m_Camera: {fileID: 1056290552341294957}
   m_OriginBaseGameObject: {fileID: 1056290553467936357}
   m_CameraFloorOffsetObject: {fileID: 1056290553100439551}
-  m_RequestedTrackingOriginMode: 0
+  m_RequestedTrackingOriginMode: 2
   m_CameraYOffset: 0
 --- !u!114 &1056290553467936377
 MonoBehaviour:
@@ -729,7 +729,7 @@ MonoBehaviour:
   m_EnableStrafe: 1
   m_EnableFly: 0
   m_UseGravity: 1
-  m_GravityApplicationMode: 0
+  m_GravityApplicationMode: 1
   m_ForwardSource: {fileID: 1056290552341294953}
   m_LeftHandMoveAction:
     m_UseReference: 1

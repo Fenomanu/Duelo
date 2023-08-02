@@ -92,4 +92,9 @@ public class PlayerManagement : MonoBehaviour
             animator.SetBool("Dead", true);
         }
     }
+
+    public void EnablePowers()
+    {
+        
+    }
 }

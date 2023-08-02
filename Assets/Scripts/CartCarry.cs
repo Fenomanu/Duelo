@@ -23,7 +23,7 @@ public class CartCarry : MonoBehaviour
     }
     private void OnTriggerStay(Collider other)
     {
-        if (started)
+        if (started && other.CompareTag("Player"))
         {
             other.transform.position += transform.position - lastPos;
             lastPos = transform.position;

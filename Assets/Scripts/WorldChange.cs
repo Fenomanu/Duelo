@@ -241,6 +241,7 @@ public class WorldChange : MonoBehaviour
     }
     public void DropObj(GameObject obj)
     {
+        if (!obj.activeSelf) return;
         obj.layer = GetWorldLayer();
         obj.transform.parent = null;
         //obj.transform.parent = curState == World.Light ? lightWorld.transform : darkWorld.transform;

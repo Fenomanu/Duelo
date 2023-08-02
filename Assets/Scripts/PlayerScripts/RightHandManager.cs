@@ -159,7 +159,7 @@ public class RightHandManager : HandManager
                 WorldChange.Instance.DropObj(grabbedObj);
                 break;
         }
-        if(thrown)
+        if (thrown)
         {
             print("Throwing");
 
