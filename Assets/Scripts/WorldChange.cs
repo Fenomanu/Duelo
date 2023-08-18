@@ -24,6 +24,7 @@ public class WorldChange : MonoBehaviour
     //World Changing
     //public GameObject lightWorld;
     //public GameObject darkWorld;
+    private TeleportationProvider tp;
     
     private bool switchWorlds;
 
@@ -57,6 +58,10 @@ public class WorldChange : MonoBehaviour
     public ContinuousMoveProviderBase move;
 
 
+    //Water Preventing
+    private WaterManager water { get; set; }
+    public void SetWater(WaterManager w) { water = w; }
+
     //GIZMOS
     private Vector3 c1;
     private Vector3 c2;
@@ -86,12 +91,11 @@ public class WorldChange : MonoBehaviour
                     darkCam.enabled=true;
                     move.forwardSource = darkCam.transform;
                     lightCam.enabled = false;
-                    //DeactivateLight();
-                    //ActivateDark();
                     mainCam = darkCam;
                     secCam = lightCam;
                     origin.Camera = mainCam;
                     bodyMap.cameraOff = mainCam.transform;
+
                     curState = World.Dark;
                     origin.transform.position += dimOffset;
                     break;
@@ -99,31 +103,25 @@ public class WorldChange : MonoBehaviour
                     lightCam.enabled = true;
                     move.forwardSource = lightCam.transform;
                     darkCam.enabled = false;
-                    //DeactivateDark();
-                    //ActivateLight();
                     mainCam = lightCam;
                     secCam = darkCam;
                     origin.Camera = mainCam;
                     bodyMap.cameraOff = mainCam.transform;
+
                     curState = World.Light;
                     origin.transform.position -= dimOffset;
                     break;
             }
+            if (water != null) water.NotInTP();
         }
         secCam.transform.position = mainCam.transform.position;
         secCam.transform.rotation = mainCam.transform.rotation;
     }
 
-    private void SetMainCamera()
-    {
-        origin.Camera = mainCam;
-        bodyMap.cameraOff = mainCam.transform;
-    }
 
-    public bool SwitchWorld()
+    public WC_RES SwitchWorld()
     {
-        //Vector3 p1, Vector3 p2, float r
-        if (!animationEnded) return false;
+        if (!animationEnded) return WC_RES.TIMEOUT;
         Vector3 center = controller.transform.position + controller.center;
         switch (curState)
         {
@@ -137,81 +135,41 @@ public class WorldChange : MonoBehaviour
         float height = controller.height;
         float rad = controller.radius;
         Collider[] cols = Physics.OverlapCapsule(center + (height / 2 - rad) * Vector3.up,
-                center - (height / 2 - rad) * Vector3.up, rad);
+                center - (height / 2 - rad) * Vector3.up, rad, ~(1<<14));
         c1 = center - (height / 3) * Vector3.up;
         c2 = center + (height / 2) * Vector3.up;
         rd = controller.radius;
         if (cols.Length > 0)
         {
-            //foreach (Collider c in cols)
-            //{
-            //    print(c.name);
-            //}
-            //GameObject cap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            //cap.transform.position = controller.transform.position + dimOffset;
-            //CapsuleCollider col = cap.GetComponent<CapsuleCollider>();
-            //col.radius = controller.radius;
-            //col.height = controller.height;
-            //col.center = controller.center;
             print("Overlapping");
-            return false;
+            return WC_RES.OBSTRUCTION;
         }
         animationEnded = false;
         vignetteUI.sizeDelta = new Vector2(50, 30);
-        //vignette.currentParameters.apertureSize = 1;
         StartCoroutine(StartDimSwap());
-        return true;
+        return WC_RES.SWITCHING;
     }
 
-    private void DeactivateDark()
-    {
-        //StartCoroutine(Toggle(false, darkWorld));
-    }
-
-    private void DeactivateLight()
-    {
-        //StartCoroutine(Toggle(false, lightWorld));
-    }
-
-    private void ActivateDark()
-    {
-        //StartCoroutine(Toggle(true, darkWorld));
-    }
-
-    private void ActivateLight()
-    {
-        //StartCoroutine(Toggle(true, lightWorld));
-    }
-
-    IEnumerator Toggle(bool pos, GameObject root)
-    {
-        root.gameObject.SetActive(pos);
-        yield return null;
-    }
     IEnumerator StartDimSwap()
     {
         
         while (vignetteUI.sizeDelta.y > 0)
         {
-            vignetteUI.sizeDelta -= new Vector2(0, 60 * Time.deltaTime);
+            vignetteUI.sizeDelta -= new Vector2(0, 120 * Time.deltaTime);
             //vignette.currentParameters.apertureSize -= Time.deltaTime;
             yield return null;
         }
         vignetteUI.sizeDelta = 50*Vector2.right;
+        if(water != null) water.InTP();
         switchWorlds = true;
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(.01f);
         while (vignetteUI.sizeDelta.y < 30)
         {
-            vignetteUI.sizeDelta += new Vector2(0, 60 * Time.deltaTime);
+            vignetteUI.sizeDelta += new Vector2(0, 120 * Time.deltaTime);
             //vignette.currentParameters.apertureSize += Time.deltaTime;
             yield return null;
         }
         animationEnded = true;
-    }
-
-    private void OrderObjs()
-    {
-
     }
 
     public LayerMask GetDefaultLayer()

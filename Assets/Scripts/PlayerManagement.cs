@@ -14,7 +14,8 @@ public class PlayerManagement : MonoBehaviour
     //Life System
     private float life = 3f;
     public int maxLife = 3;
-    public Material[] materials = new Material[4];
+    [SerializeField]
+    private Material[] materials = new Material[4];
     public MeshRenderer lifeIndicator;
 
     protected bool invulnerable;
@@ -22,17 +23,54 @@ public class PlayerManagement : MonoBehaviour
     protected float invTime;
     Animator animator;
 
+    //FilterManager
+    [Header("Filter Manager")]
+    [SerializeField]
+    private Color[] filters = new Color[2];
+    [SerializeField]
+    private Image filter;
+    [SerializeField]
+    private Transform head;
+
+    [SerializeField]
+    private LeftHandManager lHand;
+    [SerializeField]
+    private RightHandManager rHand;
+
+    [Header("Power Bools")]
+    [SerializeField]
+    private bool dimSwap = false;
+    [SerializeField]
+    private bool remoteControl = false;
+    [SerializeField]
+    private bool shooting = false;
+    [SerializeField]
+    private bool updateBools = false;
+
+
+
+    //Testing
+    private bool isLevitating;
+    CharacterController controller;
+    [SerializeField]
+    private float levSpeed;
 
     // Start is called before the first frame update
     void Start()
     {
         animator = GetComponent<Animator>();
+        SetPowers();
+        controller = GetComponent<CharacterController>();
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (updateBools)
+        {
+            updateBools = false;
+            SetPowers();
+        }
         if (invulnerable)
         {
             invTime -= Time.fixedDeltaTime;
@@ -43,6 +81,19 @@ public class PlayerManagement : MonoBehaviour
             }
             return;
         }
+        if (Input.GetKey(KeyCode.L))
+        {
+            isLevitating = true;
+            //if (isLevitating) controller.Move(Time.deltaTime * levSpeed * Vector3.up);
+        }
+        else
+        {
+            isLevitating = false;
+        }
+    }
+    private void FixedUpdate()
+    {
+        if (isLevitating) controller.Move(Time.fixedDeltaTime * levSpeed * Vector3.up);
     }
 
     public void BlockMovement()
@@ -55,6 +106,15 @@ public class PlayerManagement : MonoBehaviour
     {
         movement.moveSpeed = prevSpeed;
     }
+    public void UseGravity()
+    {
+        movement.useGravity = true;
+    }
+
+    public void NotUseGravity()
+    {
+        movement.useGravity = false;
+    }
 
     public void Heal(float h)
     {
@@ -66,6 +126,7 @@ public class PlayerManagement : MonoBehaviour
             lifeIndicator.material = materials[index];
         }
     }
+
     public void Damage(float d)
     {
         life -= d;
@@ -95,6 +156,40 @@ public class PlayerManagement : MonoBehaviour
 
     public void EnablePowers()
     {
-        
+        dimSwap = true;
+        remoteControl = true;
+        shooting = true;
+        SetPowers();
+        rHand.SetGauntlet();
+    }
+
+    private void SetPowers()
+    {
+        lHand.RemoteEnabler(remoteControl);
+        rHand.RemoteEnabler(remoteControl);
+        rHand.ShootEnabler(shooting);
+        rHand.SwapEnabler(dimSwap);
+    }
+
+    public void SetFilter(FilterColors color)
+    {
+        switch (color)
+        {
+            case FilterColors.FIRE:
+                filter.color = filters[0];
+                    break;
+            case FilterColors.WATER:
+                filter.color = filters[1];
+                    break;
+        }
+        filter.enabled = true;
+    }
+    public void DelFilter()
+    {
+        filter.enabled = false;
+    }
+    public Transform GetHead()
+    {
+        return head;
     }
 }

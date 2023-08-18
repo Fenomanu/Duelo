@@ -23,9 +23,10 @@ public class HandUI : MonoBehaviour
             }
         }
     }
-    public void ShowUISeconds(float s)
+    public void ShowUISeconds(float s, WC_RES res)
     {
         showingUI = true;
+        animator.SetInteger("UIAnimID", (int)res);
         animator.SetBool("ShowUI", showingUI);
         secondsToHide = s;
     }

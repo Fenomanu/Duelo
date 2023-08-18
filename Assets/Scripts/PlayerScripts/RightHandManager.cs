@@ -7,11 +7,14 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class RightHandManager : HandManager
 {
     //Limits
-    private bool enabledDimSwap = true;
+    private bool remoteControlEnabled = false;
+    private bool enabledDimSwap = false;
+    private bool shootingEnabled = false;
 
     //Actions
     public InputActionProperty worldAction;
 
+    //Inputs
     private float triggerValue;
     private bool pButtonValue;
     
@@ -33,18 +36,31 @@ public class RightHandManager : HandManager
     HandUI handUI;
 
     //Remote Control
-    private bool startRemote;
-    private bool remoting;
-    private const int framesTillRemote = 5;
-    private int frames_remote = 0;
+    [SerializeField]
+    private float handRemoteMax;
+    private bool startHolding;
+    public float remotingSpeed;
+    private Vector3 lastHandPos;
+    private Vector3 sphereDirection;
+    public Transform remoteSphere;
+    public float timeTillRemote = 5;
+    private float time_holding = 0;
+    private float sphereScale = .3f;
     private enum RemoteState
     {
-        startRemote = 0,
-        hooking = 1,
-        hooked = 2,
+        Idle = 0,
+        Holding = 1,
+        Throwing = 2,
+        Hooked = 3,
     }
-    RemoteState rem_st;
+    RemoteState rem_st = RemoteState.Idle;
 
+
+    //Visuals
+    [SerializeField]
+    private MeshRenderer hand;
+    [SerializeField]
+    private GameObject gauntlet;
 
     // Start is called before the first frame update
     void Start()
@@ -52,18 +68,21 @@ public class RightHandManager : HandManager
         handInteractor = GetComponent<XRDirectInteractor>();
         bodyMap = GetComponentInParent<BodyMap>();
         interactionManager = handInteractor.interactionManager;
+        remoteSphere.GetComponent<SphereDetection>().hm = this;
         handUI = GetComponent<HandUI>();
+        sphereScale = remoteSphere.localScale.x;
         //remoteSphere.GetComponent<SphereDetection>().hm = this;
     }
     private void Awake()
     {
         print("Also B Awake");
         GrabAction.action.started += (context) => {
-            startRemote = true;
+            startHolding = true;
+            print("StartedHolding");
         };
         GrabAction.action.canceled += (context) => {
             StopRemote();
-            if (grabbedObj == null) GetComponent<SphereCollider>().enabled = true; 
+            if (grabbedObj == null) GetComponent<SphereCollider>().enabled = true;
         };
     }
 
@@ -76,7 +95,7 @@ public class RightHandManager : HandManager
         if (delay > 0) delay -= Time.deltaTime;
         if(delay <= 0 && triggerValue > .5f)
         {
-            if(grabbedObj == null)
+            if(grabbedObj == null && shootingEnabled)
             {
                 GameObject bullet = Instantiate(bulletPrefab, shootPoint.position - .2f*shootPoint.up, shootPoint.rotation);
                 bullet.GetComponent<Rigidbody>().velocity = -shootPoint.up * 8;
@@ -100,29 +119,87 @@ public class RightHandManager : HandManager
         if (pButtonValue && enabledDimSwap)
         {
             print("Changing");
-            if(!WorldChange.Instance.SwitchWorld()) handUI.ShowUISeconds(1.8f);
+            WC_RES res = WorldChange.Instance.SwitchWorld();
+            switch(res){
+                case WC_RES.OBSTRUCTION:
+                    handUI.ShowUISeconds(1.8f, res);
+                    break;
+                case WC_RES.SWITCHING:
+                    break;
+                case WC_RES.TIMEOUT:
+                    handUI.ShowUISeconds(1f, res);
+                    break;
+            }
         }
     }
 
     private void RemoteControl()
     {   //Called every frame
-        if (startRemote)
+        switch (rem_st)
         {
-            frames_remote++;
-            if (frames_remote >= framesTillRemote)
-            {
+            case RemoteState.Idle:
+                if (startHolding && remoteControlEnabled)
+                {
+                    print("Starting");
+                    time_holding += Time.deltaTime;
+                    if (time_holding >= timeTillRemote)
+                    {
+                        print("started");
+                        rem_st = RemoteState.Holding;
+                        remoteSphere.gameObject.SetActive(true);
+                        remoteSphere.position = shootPoint.position;
+                        sphereDirection = -shootPoint.up;
+                        lastHandPos = transform.position;
+                        remoteSphere.transform.parent = null;
+                        //remoteSphere.localScale = Vector3.zero;
+                        remoteSphere.localScale = Vector3.one * .05f;
+                    }
+                }
+                break;
+            case RemoteState.Holding:
+                //remoteSphere.position += remotingSpeed * Time.deltaTime * (sphereDirection + (transform.position - lastHandPos));
+                remoteSphere.position += remotingSpeed * Time.deltaTime * (sphereDirection - (shootPoint.up));
+                if (remoteSphere.localScale.x < sphereScale) 
+                {
+                    remoteSphere.localScale += Time.deltaTime * 3 * Vector3.one;
+                    if (remoteSphere.localScale.x > sphereScale) remoteSphere.localScale = sphereScale * Vector3.one;
+                }
+                if (remotingObject != null)
+                {
+                    lastHandPos = transform.position;
+                    remoteSphere.gameObject.SetActive(false);
+                    rem_st = RemoteState.Throwing;
+                }
+                break;
+            case RemoteState.Throwing:
+                //remotingObject.GetComponent<Rigidbody>().velocity += remotingSpeed * Time.deltaTime * (transform.position - lastHandPos);
+                //float dist = (transform.position - lastHandPos).sqrMagnitude;
+                if ((transform.position - lastHandPos).sqrMagnitude > handRemoteMax * handRemoteMax) lastHandPos = transform.position + (lastHandPos - transform.position).normalized * handRemoteMax;
+                remotingObject.transform.position += remotingSpeed * 1.5f * Time.deltaTime * (transform.position - lastHandPos);
+                if ((remotingObject.transform.position - transform.position).sqrMagnitude > 30 * 30)
+                {
+                    StopRemote();
+                }
+                //lastHandPos = transform.position;
+                break;
+            case RemoteState.Hooked:
 
-            }
-        }
-        else if (remoting)
-        {
-
+                break;
         }
     }
     private void StopRemote()
     {
-        startRemote = false;
-        frames_remote = 0;
+        if (remotingObject != null)
+        {
+            remotingObject.GetComponent<Rigidbody>().useGravity = true;
+            remotingObject.GetComponent<Rigidbody>().velocity = (transform.position - lastHandPos) * remotingSpeed;
+        }
+        remotingObject = null;
+        rem_st = RemoteState.Idle;
+        remoteSphere.gameObject.SetActive(false);
+        startHolding = false;
+        time_holding = 0f;
+        print("Break");
     }
 
     public void GrabObj()
@@ -177,5 +254,22 @@ public class RightHandManager : HandManager
             thrown = false;
         }
         grabbedObj = null;
+    }
+    public void RemoteEnabler(bool e)
+    {
+        remoteControlEnabled = e;
+    }
+    public void SwapEnabler(bool e)
+    {
+        enabledDimSwap = e;
+    }
+    public void ShootEnabler(bool e)
+    {
+        shootingEnabled = e;
+    }
+    public void SetGauntlet()
+    {
+        hand.enabled = false;
+        gauntlet.SetActive(true);
     }
 }

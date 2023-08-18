@@ -29,6 +29,7 @@ public class AltarScript : MonoBehaviour
                 track = false;
                 gauntlet.gameObject.SetActive(false);
                 playerManagement.UnblockMovement();
+                playerManagement.EnablePowers();
             }
         }
     }

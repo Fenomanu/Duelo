@@ -5,6 +5,8 @@ using UnityEngine.XR.Interaction.Toolkit;
 
 public class LeftHandManager : HandManager
 {
+    //Limits
+    private bool remoteControlEnabled = false;
 
     //Object Management
     private XRDirectInteractor handInteractor;
@@ -14,6 +16,7 @@ public class LeftHandManager : HandManager
     public Transform shootPoint;
     private bool thrown = false;
 
+    //Inputs
     private float triggerValue;
 
     public float cadence = 0.2f;
@@ -21,6 +24,8 @@ public class LeftHandManager : HandManager
 
 
     //Remote Control
+    [SerializeField]
+    private float handRemoteMax;
     private bool startHolding;
     public float remotingSpeed;
     private Vector3 lastHandPos;
@@ -28,6 +33,7 @@ public class LeftHandManager : HandManager
     public Transform remoteSphere;
     public float timeTillRemote = 5;
     private float time_holding = 0;
+    private float sphereScale = .3f;
     private enum RemoteState
     {
         Idle = 0,
@@ -44,6 +50,7 @@ public class LeftHandManager : HandManager
         bodyMap = GetComponentInParent<BodyMap>();
         interactionManager = handInteractor.interactionManager;
         remoteSphere.GetComponent<SphereDetection>().hm = this;
+        sphereScale = remoteSphere.localScale.x;
     }
 
     private void Awake()
@@ -81,12 +88,13 @@ public class LeftHandManager : HandManager
             }
         }
     }
+
     private void RemoteControl()
     {   //Called every frame
         switch (rem_st)
         {
             case RemoteState.Idle:
-                if (startHolding)
+                if (startHolding && remoteControlEnabled)
                 {
                     print("Starting");
                     time_holding += Time.deltaTime;
@@ -99,13 +107,20 @@ public class LeftHandManager : HandManager
                         sphereDirection = shootPoint.up;
                         lastHandPos = transform.position;
                         remoteSphere.transform.parent = null;
+                        //remoteSphere.localScale = Vector3.zero;
+                        remoteSphere.localScale = Vector3.one * .05f;
                     }
                 }
                 break;
             case RemoteState.Holding:
                 //remoteSphere.position += remotingSpeed * Time.deltaTime * (sphereDirection + (transform.position - lastHandPos));
                 remoteSphere.position += remotingSpeed * Time.deltaTime * (sphereDirection + (shootPoint.up));
-                if(remotingObject != null)
+                if (remoteSphere.localScale.x < sphereScale)
+                {
+                    remoteSphere.localScale += Time.deltaTime * 3 * Vector3.one;
+                    if (remoteSphere.localScale.x > sphereScale) remoteSphere.localScale = sphereScale * Vector3.one;
+                }
+                if (remotingObject != null)
                 {
                     lastHandPos = transform.position;
                     remoteSphere.gameObject.SetActive(false);
@@ -114,6 +129,7 @@ public class LeftHandManager : HandManager
                 break;
             case RemoteState.Throwing:
                 //remotingObject.GetComponent<Rigidbody>().velocity += remotingSpeed * Time.deltaTime * (transform.position - lastHandPos);
+                if ((transform.position - lastHandPos).sqrMagnitude > handRemoteMax * handRemoteMax) lastHandPos = transform.position + (lastHandPos - transform.position).normalized * handRemoteMax;
                 remotingObject.transform.position += remotingSpeed * 1.5f * Time.deltaTime * (transform.position - lastHandPos);
                 if((remotingObject.transform.position - transform.position).sqrMagnitude > 30 * 30)
                 {
@@ -193,5 +209,9 @@ public class LeftHandManager : HandManager
             thrown = false;
         }
         grabbedObj = null;
+    }
+    public void RemoteEnabler(bool e)
+    {
+        remoteControlEnabled = e;
     }
 }
