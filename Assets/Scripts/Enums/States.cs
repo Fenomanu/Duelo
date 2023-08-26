@@ -10,3 +10,20 @@ public enum HUI_ANIM
     PRESS_GRAB = 4,
     PRESS_TRIGG = 5,
 }
+public enum OPS
+{
+    ADD,
+    SUB
+}
+public enum SIDE
+{
+    LEFT,
+    RIGHT
+}
+public enum DIR
+{
+    UP,
+    DOWN,
+    RIGHT,
+    LEFT
+}
