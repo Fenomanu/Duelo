@@ -561,7 +561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b45ba9dc3c40d5c409bb9f47da54e6ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speedToDmg: 0.5
+  speedToDmg: 0.25
   stored: 0
   bladeP: {fileID: 2906169710925562486}
   audioSource: {fileID: 4250254824927697847}

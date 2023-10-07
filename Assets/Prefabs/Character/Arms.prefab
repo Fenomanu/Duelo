@@ -717,7 +717,7 @@ MonoBehaviour:
   remotingObject: {fileID: 0}
   shootPoint: {fileID: 4230473746218344479}
   cadence: 0.2
-  handRemoteMax: 2
+  handRemoteMax: 1
   remotingSpeed: 3
   remoteSphere: {fileID: 4941153754655350925}
   timeTillRemote: 0.1
@@ -1133,7 +1133,7 @@ MonoBehaviour:
   bulletPrefab: {fileID: 3827407492480026435, guid: 6bf8849070d136845a36b529083839eb,
     type: 3}
   cadence: 0.5
-  handRemoteMax: 2
+  handRemoteMax: 1
   remotingSpeed: 3
   remoteSphere: {fileID: 5739015281774115151}
   timeTillRemote: 0.1

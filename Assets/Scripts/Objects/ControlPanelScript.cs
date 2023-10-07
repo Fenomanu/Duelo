@@ -9,7 +9,7 @@ public class ControlPanelScript : MonoBehaviour
     [SerializeField]
     private Vector3[] positions;
     private int limit = 3;
-    private int[] pointer = { 0, 0 }; // 0 = VERTICAL, 1 = HORIZONTAL
+    private int[] pointer = { 0, 2 }; // 0 = VERTICAL, 1 = HORIZONTAL
     // Start is called before the first frame update
     void Start()
     {
